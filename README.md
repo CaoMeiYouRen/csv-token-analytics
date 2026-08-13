@@ -1,109 +1,62 @@
-# 项目技术规范
+# csv-token-analytics
+
+CSV 数据可视化分析工具 —— 上传 CSV 后快速生成多维度的 Token 使用趋势图，支持粒度切换、时间筛选和模型筛选，直观洞察 API 用量变化。
+
+纯前端应用，所有数据均来自用户提供的 CSV 文件（上传 / 粘贴），在浏览器本地完成解析与汇总，不经过任何服务器。
+
+## 功能特性
+
+- **CSV 导入**：拖拽上传、点击选择、粘贴文本三种方式；自动解析 `date, model, input_tokens, output_tokens, total_tokens, cost_usd, requests, sessions` 字段
+- **折线图分析**：以日期为横轴、按 model 分组绘制多条折线，支持 Token 用量 / 费用两种指标，hover 显示具体数值
+- **汇总粒度切换**：日 / 周（ISO 周）/ 月三档粒度，前端实时分组求和
+- **时间范围筛选**：起止日期选择器，默认覆盖数据全集
+- **模型多选筛选**：自动提取模型列表，checkbox 实时控制图表折线
+- **统计卡片**：总 Tokens、总费用、总请求数、日均 Tokens，随筛选条件联动更新
+- **模型单价分析**：按时间范围折算各模型每百万 Token 平均单价
+
+## 快速开始
+
+```bash
+npm install
+npm run dev      # 开发服务器（默认 http://localhost:8001）
+npm run build    # 构建静态站点到 dist/
+npm run preview  # 本地预览构建产物
+npm run lint     # typecheck + eslint
+```
+
+## CSV 格式
+
+需包含表头，字段建议为：
+
+```
+date,model,input_tokens,output_tokens,total_tokens,cost_usd,requests,sessions
+2026-06-11,deepseek-v4-flash,12345,6789,19134,0.0012,12,3
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| date | string | 日期，`YYYY-MM-DD` |
+| model | string | 模型名称 |
+| input_tokens | number | 输入 tokens 数 |
+| output_tokens | number | 输出 tokens 数 |
+| total_tokens | number | 总 tokens 数 |
+| cost_usd | number | 费用（美元） |
+| requests | number | 请求数 |
+| sessions | number | 会话数 |
+
+`input_tokens` / `output_tokens` / `requests` / `sessions` 缺失时按 0 处理；`date` 与 `model` 为图表分组必需字段。
 
 ## 技术栈
 
-- 前端: React 19 + TypeScript
-- 样式: Tailwind CSS v4
-- UI 组件: shadcn/ui `import { Button } from "@/components/ui/button";`
-- 图标: lucide-react `import { SearchIcon } from "lucide-react";`
-- 图表: echarts-for-react `import ReactECharts from "echarts-for-react";`
-- 动画: framer-motion `import { motion } from "framer-motion";`
-- 路由: react-router-dom `import { Link, useNavigate } from "react-router-dom";`
+- React 19 + TypeScript + Vite
+- Tailwind CSS v4 + shadcn/ui
+- ECharts（图表渲染）
+- react-router-dom / sonner / framer-motion 等
 
----
+## 部署
 
-## 目录结构
+构建产物为纯静态站点（`dist/`），可部署到任意静态托管服务（Nginx、Vercel、GitHub Pages、Cloudflare Pages 等）。
 
-```
-src/
-├── index.tsx            # 入口（勿修改）
-├── app.tsx              # 路由配置（仅在 <Routes> 内增删 <Route>）
-├── index.css            # 全局样式 + 主题变量
-├── components/          # 基础 UI 组件（禁止存放业务组件）
-│   ├── layout.tsx       # 全局布局容器（含 <Outlet />）
-│   └── ui/              # shadcn/ui 内置组件（勿修改）
-├── pages/               # 页面模块（每个页面一个目录）
-│   ├── <PageName>/      # 页面目录示例
-│   │   ├── PageName.tsx        # 页面入口文件与目录同名
-│   │   └── components/         # 页面专属组件
-│   └── NotFoundPage/
-│       └── NotFoundPage.tsx
-├── hooks/               # 自定义 Hooks
-└── lib/                 # 工具函数（cn() 等）
+## License
 
-shared/
-└── static/              # 静态资源
-    ├── data/            # 数据文件（JSON）
-    └── images/          # 图片资源
-```
-
----
-
-## 模板初始状态
-
-- `app.tsx` 首页路由指向平台内置的 `<Welcome />` 组件
-- 开发时需将 `index` 路由替换为业务首页，并在 `pages/` 下创建对应页面目录
-- `layout.tsx` 为空壳容器（仅 `<Outlet />`），需根据需求实现导航和布局
-
----
-
-## 禁止修改的文件
-
-| 文件 | 原因 |
-|------|------|
-| `src/index.tsx` | Provider 层级 + 样式引入，由模板管理 |
-| `src/components/ui/*` | shadcn/ui 内置组件，版本锁定 |
-
----
-
-## 文件放置规则
-
-| 内容类型 | 放置位置 |
-|---------|---------|
-| 新页面 | `src/pages/<PageName>/PageName.tsx` |
-| 页面专属组件 | `src/pages/<PageName>/components/` |
-| 自定义 Hooks | `src/hooks/` |
-| 工具函数 | `src/lib/` |
-| 静态数据文件 | `shared/static/data/` |
-| 静态图片 | `shared/static/images/` |
-
----
-
-## 导入路径
-
-```typescript
-// @/ 别名 → src/
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
-
-// @shared/ 别名 → shared/
-import heroImage from "@shared/static/images/hero.png";
-import configData from "@shared/static/config.json";
-```
-
----
-
-## 路由配置
-
-- 新增页面需在 `src/app.tsx` 的 `<Routes>` 内注册 `<Route>`
-- `BrowserRouter` 已在 `index.tsx` 中配置，`app.tsx` 中**禁止**再包裹 Router
-
----
-
-## 主题变量
-
-主题色定义在 `src/index.css`，通过 `:root` CSS 变量 + `@theme inline` 注册到 Tailwind。
-
-| 用途 | Tailwind 类 | CSS 变量 |
-|------|------------|----------|
-| 页面背景 | `bg-background` | `--background` |
-| 主文本 | `text-foreground` | `--foreground` |
-| 卡片背景 | `bg-card` | `--card` |
-| 次要文本 | `text-muted-foreground` | `--muted-foreground` |
-| 主色 | `bg-primary` / `text-primary` | `--primary` |
-| 强调色 | `bg-accent` | `--accent` |
-| 边框 | `border-border` | `--border` |
-| 危险色 | `text-destructive` | `--destructive` |
-| 图表色 | `bg-chart-1` ~ `bg-chart-5` | `--chart-1` ~ `--chart-5` |
-
-HSL 格式使用**空格分隔**：`--primary: hsl(150 60% 40%);`
+[MIT](./LICENSE)

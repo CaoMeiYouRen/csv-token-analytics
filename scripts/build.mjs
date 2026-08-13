@@ -37,35 +37,6 @@ function cpDir(src, dest, { exclude } = {}) {
   }
 }
 
-/** 移除平台注入的 HBS 占位符（{{appId}} 等），替换为静态默认值 */
-function stripPlatformPlaceholders(htmlPath) {
-  let html = fs.readFileSync(htmlPath, 'utf-8');
-  html = html.replace(/<script>\s*window\.appId[\s\S]*?<\/script>/, () => {
-    const code = [
-      'window.appId = "";',
-      'window.userId = "";',
-      'window.tenantId = "";',
-      'window.userName = "";',
-      'window.csrfToken = "";',
-      'window.ENVIRONMENT = "production";',
-      'window.__BASENAME__ = "/";',
-    ].join('\n    ');
-    return `<script>\n    ${code}\n  </script>`;
-  });
-  const placeholders = {
-    '{{appName}}': 'CSV 数据可视化',
-    '{{appAvatar}}': 'favicon.svg',
-    '{{appDescription}}': 'CSV 数据可视化分析工具',
-  };
-  for (const [token, value] of Object.entries(placeholders)) {
-    html = html.split(token).join(value);
-  }
-  if (html.includes('{{')) {
-    console.warn('  [warn] index.html 仍包含未处理的占位符');
-  }
-  fs.writeFileSync(htmlPath, html);
-}
-
 async function main() {
   // 清理
   await rmrf(DIST);
@@ -81,13 +52,10 @@ async function main() {
     process.exit(result.status ?? 1);
   }
 
-  // 2. 清除平台占位符（{{appId}} 等 HBS 模板残留）
-  stripPlatformPlaceholders(path.join(CLIENT, 'index.html'));
-
-  // 3. 组装纯静态 dist/：index.html + assets/ + public 静态文件
+  // 2. 组装纯静态 dist/：index.html + assets/ + public 静态文件
   cpDir(CLIENT, DIST);
 
-  // 4. 合并私有静态资源（shared/static，排除代码文件）
+  // 3. 合并私有静态资源（shared/static，排除代码文件）
   const STATIC = path.join(ROOT, 'shared', 'static');
   if (fs.existsSync(STATIC)) {
     cpDir(STATIC, DIST, { exclude: ['.ts', '.tsx', '.js', '.jsx'] });

@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef, useState, type DragEvent, type ChangeEvent } from 'react';
-import { Upload, FileText, ClipboardPaste, X, CheckCircle2 } from 'lucide-react';
+import { Upload, ClipboardPaste, X, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,10 +9,9 @@ import { parseCsv, type IUsageRecord } from '@/data/usage';
 interface UploadSectionProps {
   records: IUsageRecord[];
   onRecordsChange: (records: IUsageRecord[]) => void;
-  isLoading: boolean;
 }
 
-export default memo(function UploadSection({ records, onRecordsChange, isLoading }: UploadSectionProps) {
+export default memo(function UploadSection({ records, onRecordsChange }: UploadSectionProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
@@ -146,17 +145,13 @@ export default memo(function UploadSection({ records, onRecordsChange, isLoading
           onClick={() => fileInputRef.current?.click()}
         >
           <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-            {isLoading ? (
-              <FileText className="size-6 text-primary animate-pulse" />
-            ) : records.length > 0 ? (
+            {records.length > 0 ? (
               <CheckCircle2 className="size-6 text-primary" />
             ) : (
               <Upload className="size-6 text-primary" />
             )}
           </div>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">正在加载示例数据…</p>
-          ) : records.length > 0 ? (
+          {records.length > 0 ? (
             <div className="text-center">
               <p className="text-sm font-medium">
                 <span className="text-foreground">{fileName || '已加载数据'}</span>

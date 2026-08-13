@@ -1,14 +1,21 @@
 import { memo, useMemo, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption } from 'echarts';
-import { formatNumber, formatUsd, type Granularity, aggregateByGranularity } from '@/data/usage';
+import { formatNumber, formatUsd, type Granularity, aggregateByGranularity, type IUsageRecord } from '@/data/usage';
 import { CHART_COLORS } from '@/lib/chart-colors';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 type ChartMetric = 'tokens' | 'cost';
 
+interface TooltipParam {
+  axisValueLabel?: string;
+  color?: string;
+  seriesName?: string;
+  value?: unknown;
+}
+
 interface ChartSectionProps {
-  records: { date: string; model: string; total_tokens: number; cost_usd: number; requests: number }[];
+  records: IUsageRecord[];
   granularity: Granularity;
   selectedModels: string[];
   startDate: string;
@@ -27,7 +34,7 @@ export default memo(function ChartSection({
   const option = useMemo<EChartsOption>(() => {
     // 筛选 + 聚合
     const filtered = records.filter((r) => r.date >= startDate && r.date <= endDate);
-    const aggregated = aggregateByGranularity(filtered as any, granularity);
+    const aggregated = aggregateByGranularity(filtered, granularity);
 
     // 取所有 period（去重排序）
     const periods = Array.from(new Set(aggregated.map((a) => a.period))).sort();
@@ -79,7 +86,7 @@ export default memo(function ChartSection({
         borderColor: 'rgba(0, 0, 0, 0.08)',
         borderWidth: 1,
         textStyle: { color: '#111', fontSize: 12 },
-        formatter: (params: any) => {
+        formatter: (params: TooltipParam | TooltipParam[]) => {
           const list = Array.isArray(params) ? params : [params];
           if (list.length === 0) return '';
           const title = `<div style="font-weight:600;margin-bottom:4px;">${list[0].axisValueLabel}</div>`;
@@ -87,8 +94,7 @@ export default memo(function ChartSection({
             .filter((p) => p.value !== null && p.value !== undefined)
             .map((p) => {
               const color = p.color;
-              const value =
-                metric === 'cost' ? formatUsd(p.value) : formatNumber(p.value);
+              const value = metric === 'cost' ? formatUsd(Number(p.value)) : formatNumber(Number(p.value));
               return `<div style="display:flex;justify-content:space-between;gap:16px;font-size:12px;">
                 <span style="display:flex;align-items:center;gap:6px;">
                   <span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;"></span>

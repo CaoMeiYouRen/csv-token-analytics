@@ -1,51 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import { logger } from '@lark-apaas/client-toolkit-lite';
 import UploadSection from './UploadSection';
 import ControlPanelSection from './ControlPanelSection';
 import ChartSection from './ChartSection';
 import StatsSection from './StatsSection';
 import ModelPriceSection from './ModelPriceSection';
-import { parseCsv, type Granularity, type IUsageRecord } from '@/data/usage';
-
-const SAMPLE_CSV_URL = 'https://aka.doubaocdn.com/s/fBfud2qsPj';
+import type { Granularity, IUsageRecord } from '@/data/usage';
 
 export default function CsvVizPage() {
   const [records, setRecords] = useState<IUsageRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [granularity, setGranularity] = useState<Granularity>('day');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
-
-  // 加载示例数据
-  useEffect(() => {
-    let cancelled = false;
-    async function loadSample() {
-      try {
-        const res = await fetch(SAMPLE_CSV_URL);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const text = await res.text();
-        const parsed = parseCsv(text);
-        if (cancelled) return;
-        if (parsed.length === 0) {
-          throw new Error('解析结果为空');
-        }
-        setRecords(parsed);
-        toast.success(`示例数据已加载（${parsed.length} 条）`);
-      } catch (e) {
-        logger.error('Failed to load sample CSV:', String(e));
-        if (cancelled) return;
-        toast.error('示例数据加载失败，请手动上传 CSV 文件');
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-    loadSample();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const models = useMemo(() => {
     const set = new Set<string>();
@@ -103,7 +69,6 @@ export default function CsvVizPage() {
         <UploadSection
           records={records}
           onRecordsChange={handleRecordsChange}
-          isLoading={isLoading}
         />
         <ControlPanelSection
           granularity={granularity}
