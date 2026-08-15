@@ -11,9 +11,17 @@ export interface IUsageRecord {
   sessions: number;
 }
 
+function normalizeDate(raw: string): string {
+  const m = raw.trim().match(/^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$/);
+  if (!m) return raw;
+  const [, y, mo, d] = m;
+  return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
+}
+
 /**
  * 解析 CSV 文本为 IUsageRecord[]
  * 支持带 BOM、引号包裹字段、换行符在引号内等常见场景
+ * 日期支持 YYYY-MM-DD 或 YYYY/M/D 等分隔符与不补零写法，统一规范化为 YYYY-MM-DD
  */
 export function parseCsv(text: string): IUsageRecord[] {
   const cleaned = text.replace(/^\uFEFF/, '').trim();
@@ -69,7 +77,7 @@ export function parseCsv(text: string): IUsageRecord[] {
     const row = lines[i];
     if (row.length === 1 && row[0] === '') continue;
     records.push({
-      date: (row[idx('date')] || '').trim(),
+      date: normalizeDate((row[idx('date')] || '').trim()),
       model: (row[idx('model')] || '').trim(),
       input_tokens: Number(row[idx('input_tokens')]) || 0,
       output_tokens: Number(row[idx('output_tokens')]) || 0,
