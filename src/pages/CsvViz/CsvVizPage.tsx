@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import UploadSection from './UploadSection';
 import ControlPanelSection from './ControlPanelSection';
 import ChartSection from './ChartSection';
+import HeatmapSection from './HeatmapSection';
 import StatsSection from './StatsSection';
 import ModelPriceSection from './ModelPriceSection';
 import type { Granularity, IUsageRecord } from '@/data/usage';
@@ -87,6 +88,12 @@ export default function CsvVizPage() {
         <ChartSection
           records={records}
           granularity={granularity}
+          selectedModels={selectedModels}
+          startDate={startDate}
+          endDate={endDate}
+        />
+        <HeatmapSection
+          records={records}
           selectedModels={selectedModels}
           startDate={startDate}
           endDate={endDate}
