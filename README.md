@@ -58,6 +58,12 @@ date,model,input_tokens,output_tokens,total_tokens,cost_usd,requests,sessions
 
 构建产物为纯静态站点（`dist/`），可部署到任意静态托管服务（Nginx、Vercel、GitHub Pages、Cloudflare Pages 等）。
 
+部署到子路径时，构建前设置 `CLIENT_BASE_PATH`（如 `/token/`），它会同时作用于静态资源路径与前端路由 basename：
+
+```bash
+CLIENT_BASE_PATH=/token/ npm run build
+```
+
 ## License
 
 [MIT](./LICENSE)

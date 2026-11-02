@@ -22,7 +22,7 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter basename={process.env.CLIENT_BASE_PATH || "/"}>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ErrorBoundary fallbackRender={ErrorFallback}>
         <App />
       </ErrorBoundary>
